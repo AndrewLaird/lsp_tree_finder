@@ -1,11 +1,11 @@
 import sys
-import argparse
 import re
 from typing import List, Optional, Tuple
 from pathlib import Path
 from tree_sitter import Language, Node, Parser
 
-from lsp_tree_finder.helpers import lsp, treesitter
+from helpers import treesitter
+from helpers import lsp
 import pylspclient
 from pylspclient.lsp_client import lsp_structs
 
@@ -255,23 +255,22 @@ def search_pattern(lsp_client, file_path, function_name, pattern):
         print("No matches found")
 
 
+def main():
+    if len(sys.argv) < 4:
+        print("Usage: python script.py <file> <function> <pattern>")
+        sys.exit(1)
 
-def cli():
-    parser = argparse.ArgumentParser(description="Search for a pattern in PHP code.")
-    parser.add_argument("file", help="The file to analyze")
-    parser.add_argument("function", help="The function to search")
-    parser.add_argument("pattern", help="The pattern to search for")
-
-    args = parser.parse_args()
-
-    file_path = Path(args.file)
+    file_path = Path(sys.argv[1])
 
     if not file_path.is_file():
         print(f"File {file_path} not found")
         sys.exit(1)
 
-    function_name = args.function
-    pattern = re.compile(args.pattern)
+    function_name = sys.argv[2]
+    pattern = re.compile(sys.argv[3])
 
     lsp_client = lsp.PHP_LSP_CLIENT()
     search_pattern(lsp_client, file_path, function_name, pattern)
+
+if __name__ == "__main__":
+    main()
