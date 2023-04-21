@@ -1,0 +1,3 @@
+[console_scripts]
+lsp-tree-finder = lsp_tree_finder.main:cli
+
