@@ -1,6 +1,6 @@
 import contextlib
 from dataclasses import dataclass
-import pylspclient
+import lsp_tree_finder.vendor.pylspclient_silent.pylspclient as pylspclient
 import os
 import subprocess
 import threading
@@ -54,3 +54,7 @@ class PHP_LSP_CLIENT():
         self.lsp_client.didOpen(pylspclient.lsp_structs.TextDocumentItem(file_uri, languageId, 1, text))
         results = self.lsp_client.definition(pylspclient.lsp_structs.TextDocumentIdentifier(file_uri), pylspclient.lsp_structs.Position(row, col))
         return results;
+    
+    def close(self):
+        self.lsp_client.shutdown()
+        self.lsp_client.exit()

@@ -6,7 +6,7 @@ from pathlib import Path
 from tree_sitter import Language, Node, Parser
 
 from lsp_tree_finder.helpers import lsp, treesitter
-import pylspclient
+import lsp_tree_finder.vendor.pylspclient_silent.pylspclient as pylspclient
 from pylspclient.lsp_client import lsp_structs
 
 
@@ -275,3 +275,5 @@ def cli():
 
     lsp_client = lsp.PHP_LSP_CLIENT()
     search_pattern(lsp_client, file_path, function_name, pattern)
+    lsp_client.close()
+
