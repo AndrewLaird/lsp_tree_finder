@@ -1,1 +1,2 @@
-vendor/tree-sitter-php
+/lsp_tree_finder/vendor/*
+!/lsp_tree_finder/vendor/*/.git
