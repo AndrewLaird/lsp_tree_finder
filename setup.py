@@ -6,10 +6,13 @@ setup(
     packages=find_packages(),
     package_dir={
         'tree-sitter-php': '/vendor/tree-sitter-php',
-        'pylspclient_silet': '/vendor/pylspclient_silet',
-        },
+    },
     install_requires=[
         "tree_sitter",
+    ],
+    dependency_links=[
+        # Up to date pylspclient
+        "git+https://github.com/yeger00/pylspclient.git#egg=pylspclient'"
     ],
     entry_points={
         "console_scripts": [

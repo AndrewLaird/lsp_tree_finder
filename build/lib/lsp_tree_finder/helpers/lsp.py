@@ -1,6 +1,6 @@
 import contextlib
 from dataclasses import dataclass
-import lsp_tree_finder.vendor.pylspclient_silent.pylspclient as pylspclient
+import pylspclient
 import os
 import subprocess
 import threading
@@ -22,8 +22,6 @@ class ReadPipe(threading.Thread):
 def get_lsp_client():
     intelephense_cmd = ["intelephense", "--stdio"]
     p = subprocess.Popen(intelephense_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    read_pipe = ReadPipe(p.stderr)
-    read_pipe.start()
     json_rpc_endpoint = pylspclient.JsonRpcEndpoint(p.stdin, p.stdout)
     lsp_endpoint = pylspclient.LspEndpoint(json_rpc_endpoint)
 
@@ -35,12 +33,12 @@ def get_lsp_client():
     workspace_folders = [{'name': 'php-lsp', 'uri': root_uri}]
     lsp_client.initialize(p.pid, None, root_uri, None, capabilities, "off", workspace_folders)
     lsp_client.initialized()
-    return lsp_client
+    return lsp_client, p
 
 
 class PHP_LSP_CLIENT():
     def __init__(self):
-        self.lsp_client = get_lsp_client()
+        self.lsp_client, self.subprocess = get_lsp_client()
         pass
 
     """
@@ -49,12 +47,14 @@ class PHP_LSP_CLIENT():
     def get_definitions(self, file_path, row, col):
         file_uri = "file://"+file_path
 
-        text = open(file_path, "r").read()
-        languageId = pylspclient.lsp_structs.LANGUAGE_IDENTIFIER.PHP
-        self.lsp_client.didOpen(pylspclient.lsp_structs.TextDocumentItem(file_uri, languageId, 1, text))
-        results = self.lsp_client.definition(pylspclient.lsp_structs.TextDocumentIdentifier(file_uri), pylspclient.lsp_structs.Position(row, col))
-        return results;
+        results = None
+        with open(file_path, "r") as text:
+            languageId = pylspclient.lsp_structs.LANGUAGE_IDENTIFIER.PHP
+            self.lsp_client.didOpen(pylspclient.lsp_structs.TextDocumentItem(file_uri, languageId, 1, text.read()))
+            results = self.lsp_client.definition(pylspclient.lsp_structs.TextDocumentIdentifier(file_uri), pylspclient.lsp_structs.Position(row, col))
+        return results
     
     def close(self):
         self.lsp_client.shutdown()
         self.lsp_client.exit()
+        self.subprocess.kill()

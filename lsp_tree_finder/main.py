@@ -6,7 +6,7 @@ from pathlib import Path
 from tree_sitter import Language, Node, Parser
 
 from lsp_tree_finder.helpers import lsp, treesitter
-import lsp_tree_finder.vendor.pylspclient_silent.pylspclient as pylspclient
+import pylspclient
 from pylspclient.lsp_client import lsp_structs
 
 
@@ -25,8 +25,9 @@ parser = Parser()
 parser.set_language(PHP_LANGUAGE)
 parsed_files = {}
 
+
 def parse_file(file_path):
-    if(file_path in parsed_files):
+    if file_path in parsed_files:
         return parsed_files[file_path]
     with file_path.open() as file:
         code = file.read()
@@ -100,7 +101,7 @@ def collect_function_calls(
     path: List[PathObject],
     file_name: str,
 ):
-    if not (file_name,node) or (file_name,node.id) in visited_nodes:
+    if not (file_name, node) or (file_name, node.id) in visited_nodes:
         return
 
     visited_nodes.add((file_name, node.id))
@@ -137,9 +138,9 @@ def collect_function_calls(
         get_definition_result = get_definition_node_of_member_call_expression(
             lsp_client, node, file_name
         )
-        if(get_definition_result is None):
+        if get_definition_result is None:
             function_name_node = treesitter.find_child_of_type(node, "name")
-            print('Could not get definition for', str(function_name_node.text));
+            print("Could not get definition for", str(function_name_node.text))
         else:
             target_node, target_file_path = get_definition_result
 
@@ -174,7 +175,7 @@ def get_tree_sitter_node_from_lsp_range(
         root_node, target_range.start.line, target_range.end.line
     )
     if target_node is None:
-        #raise Exception("Goto not found")
+        # raise Exception("Goto not found")
         return (target_tree.root_node, str(target_file_path))
     else:
         return target_node, str(target_file_path)
@@ -189,7 +190,7 @@ def get_path_object_from_node(node, file_name):
 
 def get_definition_node_of_member_call_expression(
     lsp_client: lsp.PHP_LSP_CLIENT, node, file_name
-)-> Optional[Tuple[Node, str]]:
+) -> Optional[Tuple[Node, str]]:
     if not node or node.type not in [
         "member_call_expression",
         "object_creation_expression",
@@ -220,8 +221,27 @@ def get_definition_node_of_member_call_expression(
     return tree_nodes[0]
 
 
-def search_pattern(lsp_client, file_path, function_name, pattern):
+def print_matches(matches):
+    if matches:
+        for match in matches:
+            match_path_end = match["path"][-1]
+            print(
+                f"{match_path_end.function_name}: [line {match_path_end.match_line_number}]"
+            )
+            print("Path:\n", " -> \n ".join(str(p) for p in match["path"]))
+            line = match_path_end.start_line
+            text_lines = match["text"].split("\n")
+            for text_line in text_lines:
+              if(line == match_path_end.match_line_number):
+                print(f"***{line} ",text_line)
+              else:
+                print(f"{line} ",text_line)
+              line += 1
+    else:
+        print("No matches found")
 
+
+def search_pattern(lsp_client, file_path, function_name, pattern):
     root_node = parse_file(file_path)
     parent_function = find_function_or_method(root_node, function_name)
     if not parent_function:
@@ -241,19 +261,7 @@ def search_pattern(lsp_client, file_path, function_name, pattern):
         path,
         str(file_path),
     )
-
-    # Output the results
-    if matches:
-        for match in matches:
-            match_path_end = match["path"][-1]
-            print(
-                f"{match_path_end.function_name}: [line {match_path_end.match_line_number}]"
-            )
-            print("Path:\n", " -> \n ".join(str(p) for p in match["path"]))
-            print(match["text"])
-    else:
-        print("No matches found")
-
+    return matches
 
 
 def cli():
@@ -274,6 +282,10 @@ def cli():
     pattern = re.compile(args.pattern)
 
     lsp_client = lsp.PHP_LSP_CLIENT()
-    search_pattern(lsp_client, file_path, function_name, pattern)
+    matches = search_pattern(lsp_client, file_path, function_name, pattern)
+    print_matches(matches)
     lsp_client.close()
 
+
+if __name__ == "__main__":
+    cli()

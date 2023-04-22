@@ -1,6 +1,7 @@
 setup.py
 lsp_tree_finder/__init__.py
 lsp_tree_finder/main.py
+lsp_tree_finder/test_search_pattern.py
 lsp_tree_finder.egg-info/PKG-INFO
 lsp_tree_finder.egg-info/SOURCES.txt
 lsp_tree_finder.egg-info/dependency_links.txt
@@ -11,12 +12,3 @@ lsp_tree_finder/helpers/__init__.py
 lsp_tree_finder/helpers/lsp.py
 lsp_tree_finder/helpers/treesitter.py
 lsp_tree_finder/vendor/__init__.py
-lsp_tree_finder/vendor/pylspclient_silent/__init__.py
-lsp_tree_finder/vendor/pylspclient_silent/setup.py
-lsp_tree_finder/vendor/pylspclient_silent/pylspclient/__init__.py
-lsp_tree_finder/vendor/pylspclient_silent/pylspclient/json_rpc_endpoint.py
-lsp_tree_finder/vendor/pylspclient_silent/pylspclient/lsp_client.py
-lsp_tree_finder/vendor/pylspclient_silent/pylspclient/lsp_endpoint.py
-lsp_tree_finder/vendor/pylspclient_silent/pylspclient/lsp_structs.py
-lsp_tree_finder/vendor/pylspclient_silent/tests/__init__.py
-lsp_tree_finder/vendor/pylspclient_silent/tests/test_json_rpc_endpoint.py
