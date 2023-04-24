@@ -259,7 +259,7 @@ def print_matches(matches: List[MatchObject]):
     if matches:
         print("~~~~~~~~~~~~~~~~~")
         print("Failed to follow:")
-        print("\n ".join([str(p) for p in failed_to_follow]))
+        print("\n".join([str(p) for p in failed_to_follow]))
         for match in matches:
 
             print("-----------------")
@@ -268,7 +268,10 @@ def print_matches(matches: List[MatchObject]):
             text_lines = match.function_text.split("\n")
             print(match.function_line_number, text_lines[0])
             print(match.match_line_number, text_lines[match_text_line])
-            print("Path:\n", " -> \n ".join([str(p) for p in match.path]))
+            print("Path:")
+            for path in match.path:
+                print(str(path),'->')
+            print(match.file_name, text_lines[0])
             # for text_line in text_lines:
             # if(line == match_path_end.match_line_number):
             # print(f"***{line} ",text_line)

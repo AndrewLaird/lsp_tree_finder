@@ -28,7 +28,6 @@ def get_lsp_client():
     lsp_client = pylspclient.LspClient(lsp_endpoint)
     capabilities = {
         # Add your desired capabilities here
-        'publishDiagnostics': {'relatedInformation': False},
     }
     root_uri = os.path.abspath('./')  # Use a valid root URI for your PHP project
     workspace_folders = [{'name': 'php-lsp', 'uri': root_uri}]
