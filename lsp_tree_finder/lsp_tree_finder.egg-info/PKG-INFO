@@ -1,0 +1,15 @@
+Metadata-Version: 2.1
+Name: lsp-tree-finder
+Version: 0.1
+Summary: Command line too to search for pattern inside of call tree under selected function
+Home-page: https://github.com/AndrewLaird/lsp_tree_finder
+Author: Andrew Laird
+Author-email: lairdandrew11@gmail.com
+Classifier: Development Status :: 3 - Alpha
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Description-Content-Type: text/markdown

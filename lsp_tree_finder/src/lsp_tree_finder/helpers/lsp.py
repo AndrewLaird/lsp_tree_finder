@@ -1,5 +1,3 @@
-import contextlib
-from dataclasses import dataclass
 import pylspclient
 import os
 import subprocess
