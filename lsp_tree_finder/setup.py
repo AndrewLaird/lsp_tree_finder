@@ -5,6 +5,7 @@ setup(
     version='0.2',  
     packages=find_packages(),  
     url='https://github.com/AndrewLaird/lsp_tree_finder',  
+    package_dir={'': 'src'},
     author='Andrew Laird',  
     author_email='lairdandrew11@gmail.com',  # Your email
     description='Command line too to search for pattern inside of call tree under selected function',  # A brief description of your package

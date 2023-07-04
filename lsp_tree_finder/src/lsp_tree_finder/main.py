@@ -7,8 +7,8 @@ from pathlib import Path
 from tree_sitter import Language, Node, Parser
 
 from lsp_tree_finder.helpers import lsp, treesitter
+from lsp_tree_finder.data_classes import PathObject, MatchObject
 import pylspclient
-from pylspclient.lsp_client import lsp_structs
 
 Language.build_library(
     # Store the library in the `build` directory
@@ -37,44 +37,6 @@ def parse_file(file_path):
     root_node = tree.root_node
     parsed_files[file_path] = root_node
     return root_node
-
-
-class PathObject:
-    def __init__(
-        self,
-        file_name: str,
-        function_name: str,
-        start_line: int,
-        path_function_call_line: int,
-    ):
-        self.file_name = file_name
-        self.function_name = function_name
-        self.start_line = start_line
-        self.path_function_call_line = path_function_call_line
-
-    def __str__(self):
-        return f"{self.file_name}: {self.function_name} (line {self.path_function_call_line})"
-
-    def __repr__(self):
-        return self.__str__()
-
-
-class MatchObject:
-    def __init__(
-        self,
-        node: treesitter.Node,
-        file_name: str,
-        function_text: str,
-        function_line_number: int,
-        match_line_number: int,
-        path: List[PathObject],
-    ):
-        self.node = node
-        self.file_name = file_name
-        self.function_text = function_text
-        self.function_line_number = function_line_number
-        self.match_line_number = match_line_number
-        self.path = path
 
 
 def get_function_or_method_name(node) -> str:
@@ -282,12 +244,12 @@ def print_matches(matches: List[MatchObject]):
         print("No matches found")
 
 
-def search_pattern(lsp_client, file_path, function_name, pattern):
+def search_pattern(lsp_client, file_path, function_name, pattern) -> List[MatchObject]:
     root_node = parse_file(file_path)
     parent_function = find_function_or_method(root_node, function_name)
     if not parent_function:
         print("Not inside a function or method")
-        return
+        return []
 
     # Collect matching function calls
     matches = []

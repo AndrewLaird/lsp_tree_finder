@@ -4,6 +4,10 @@ import subprocess
 import threading
 
 
+def pass_function(*args, **kwargs):
+    pass
+    return 
+
 
 class ReadPipe(threading.Thread):
     def __init__(self, pipe):
@@ -13,7 +17,6 @@ class ReadPipe(threading.Thread):
     def run(self):
         line = self.pipe.readline().decode('utf-8')
         while line:
-            #print(line)
             line = self.pipe.readline().decode('utf-8')
 
 
@@ -21,7 +24,10 @@ def get_lsp_client():
     intelephense_cmd = ["intelephense", "--stdio"]
     p = subprocess.Popen(intelephense_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     json_rpc_endpoint = pylspclient.JsonRpcEndpoint(p.stdin, p.stdout)
-    lsp_endpoint = pylspclient.LspEndpoint(json_rpc_endpoint)
+    lsp_endpoint = pylspclient.LspEndpoint(
+            json_rpc_endpoint, 
+            method_callbacks= {}, 
+            notify_callbacks={"window/logMessage": pass_function})
 
     lsp_client = pylspclient.LspClient(lsp_endpoint)
     capabilities = {
@@ -56,3 +62,25 @@ class PHP_LSP_CLIENT():
         self.lsp_client.shutdown()
         self.lsp_client.exit()
         self.subprocess.kill()
+
+
+class LspClient:
+    def __init__(self, host, port):
+        self.lsp_transport = pylspclient.LspEndpointTransport.connect_tcp(host, port)
+        self.lsp_client = pylspclient.LspClient(self.lsp_transport)
+
+        # Initialize the connection
+        init_params = pylspclient.InitializeParams(processId=None, rootUri=None,
+                                                   capabilities={}, workspaceFolders=None)
+        self.lsp_client.call('initialize', init_params)
+
+    def get_go_to_definition_response(self, line, character, filepath):
+        # Perform the "go to definition" operation
+        params = pylspclient.TextDocumentPositionParams(
+            textDocument=pylspclient.TextDocumentIdentifier(uri=filepath),
+            position=pylspclient.Position(line=line, character=character))
+        response = self.lsp_client.call('textDocument/definition', params)
+
+        # Parse the response
+        response_data = json.loads(response)
+        return response_data

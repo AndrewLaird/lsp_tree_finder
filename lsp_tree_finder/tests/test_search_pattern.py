@@ -2,7 +2,7 @@ import unittest
 from pathlib import Path
 import re
 from lsp_tree_finder.helpers import lsp
-from lsp_tree_finder.main import search_pattern, print_matches
+from lsp_tree_finder.main import search_pattern
 
 class TestSearchPattern(unittest.TestCase):
 
@@ -18,11 +18,11 @@ class TestSearchPattern(unittest.TestCase):
         pattern = re.compile(r"TestClass2")
 
         matches = search_pattern(self.lsp_client, file_path, function_name, pattern)
-        print(matches)
+        print(matches[0].path);
         self.assertEqual(len(matches), 1)
-        self.assertEqual(matches[0]["path"][-1].file_name, "test1.php")
-        self.assertEqual(matches[0]["path"][-1].function_name, "TestClass2")
-        self.assertEqual(matches[0]["path"][-1].match_line_number, 9)
+        self.assertEqual(matches[0].path[-1].file_name, "test1.php")
+        self.assertEqual(matches[0].path[-1].function_name, "TestClass2")
+        self.assertEqual(matches[0].path[-1].match_line_number, 9)
 
     def test_search_pattern_test2(self):
         file_path = Path("tests/test1.php")
@@ -31,9 +31,9 @@ class TestSearchPattern(unittest.TestCase):
 
         matches = search_pattern(self.lsp_client, file_path, function_name, pattern)
         self.assertEqual(len(matches), 1)
-        self.assertEqual(matches[0]["path"][-1].file_name, "test1.php")
-        self.assertEqual(matches[0]["path"][-1].function_name, "method5")
-        self.assertEqual(matches[0]["path"][-1].match_line_number, 15)
+        self.assertEqual(matches[0].path[-1].file_name, "test1.php")
+        self.assertEqual(matches[0].path[-1].function_name, "method5")
+        self.assertEqual(matches[0].path[-1].match_line_number, 15)
 
     def test_search_pattern_test3(self):
         file_path = Path("tests/test2.php")
@@ -42,9 +42,9 @@ class TestSearchPattern(unittest.TestCase):
 
         matches = search_pattern(self.lsp_client, file_path, function_name, pattern)
         self.assertEqual(len(matches), 1)
-        self.assertEqual(matches[0]["path"][-1].file_name, "test2.php")
-        self.assertEqual(matches[0]["path"][-1].function_name, "TestClass1")
-        self.assertEqual(matches[0]["path"][-1].match_line_number, 16)
+        self.assertEqual(matches[0].path[-1].file_name, "test2.php")
+        self.assertEqual(matches[0].path[-1].function_name, "TestClass1")
+        self.assertEqual(matches[0].path[-1].match_line_number, 16)
 
 if __name__ == "__main__":
     unittest.main()
