@@ -21,31 +21,33 @@ class TestSearchPattern(unittest.TestCase):
         pattern = re.compile(r"TestClass2")
 
         matches = search_pattern(self.lsp_client, file_path, function_name, pattern)
+        print(matches[1].path)
         self.assertEqual(len(matches), 2)
-        self.assertEqual(Path(matches[0].file_name).name, "test1.php")
-        self.assertEqual(Path(matches[1].file_name).name, "test2.php")
-        self.assertEqual(matches[0].match_line_number, 11)
-        self.assertEqual(matches[1].match_line_number, 7)
+        self.assertEqual(Path(matches[1].path[-1].file_name).name, "test2.php")
+        self.assertEqual(matches[1].path[-1].function_name, "method2")
+        self.assertEqual(matches[1].path[-1].match_line_number, 5)
 
     def test_search_pattern_test2(self):
         file_path = self.test_dir / "test1.php"
         function_name = "method4"
-        pattern = re.compile(r"method4\(\);")
+        pattern = re.compile(r"method5")
 
         matches = search_pattern(self.lsp_client, file_path, function_name, pattern)
         self.assertEqual(len(matches), 1)
-        self.assertEqual(matches[0].file_name, "test1.php")
-        self.assertEqual(matches[0].match_line_number, 21)
+        self.assertEqual(matches[0].path[-1].file_name, "test1.php")
+        self.assertEqual(matches[0].path[-1].function_name, "method5")
+        self.assertEqual(matches[0].path[-1].match_line_number, 15)
 
     def test_search_pattern_test3(self):
         file_path = self.test_dir / "test2.php"
         function_name = "method3"
-        pattern = re.compile(r" TestClass1\.")
+        pattern = re.compile(r"TestClass1")
 
         matches = search_pattern(self.lsp_client, file_path, function_name, pattern)
         self.assertEqual(len(matches), 1)
-        self.assertEqual(matches[0].file_name, "test1.php")
-        self.assertEqual(matches[0].match_line_number, 26)
+        self.assertEqual(matches[0].path[-1].file_name, "test2.php")
+        self.assertEqual(matches[0].path[-1].function_name, "TestClass1")
+        self.assertEqual(matches[0].path[-1].match_line_number, 16)
 
 if __name__ == "__main__":
     unittest.main()

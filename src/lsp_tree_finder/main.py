@@ -66,88 +66,124 @@ def find_function_or_method(node, name):
 
     return None
 
+def process_function_call_or_declaration(
+    node,
+    pattern: re.Pattern,
+    path: List[PathObject],
+    file_name: str,
+) -> List[MatchObject]:
+    text = node.text
+    function_start_line = node.start_point[0] + 1
+    matches = []
+    search_results = pattern.finditer(text.decode())
+    for search_result in search_results:
+        match_start = search_result.start(0)
+        lines_before_match = text.decode()[:match_start].count("\n")
+        match_line_number = function_start_line + lines_before_match
+        matches.append(
+            MatchObject(
+                node=node,
+                file_name=os.path.relpath(file_name, os.getcwd()),
+                function_text=text.decode(),
+                function_line_number=function_start_line,
+                match_line_number=match_line_number,
+                path=path,
+            )
+        )
+    return matches
 
-def collect_function_calls(
+
+def process_member_call_expression_or_object_creation_expression(
     lsp_client,
     node,
     pattern: re.Pattern,
-    matches,
     visited_nodes,
     path: List[PathObject],
     file_name: str,
     function_node: treesitter.Node,
-):
-    if not (file_name, node) or (file_name, node.id) in visited_nodes:
-        return
-
-    visited_nodes.add((file_name, node.id))
-    if node.type in ["function_call", "method_declaration"]:
-        text = node.text
-
-        function_start_line = node.start_point[0] + 1
-        search_results = pattern.finditer(text.decode())
-        for search_result in search_results:
-
-            match_start = search_result.start(0)
-            # Count the number of newline characters before the match
-            lines_before_match = text.decode()[:match_start].count("\n")
-
-            # Calculate the line number of the match in the whole file
-            match_line_number = function_start_line + lines_before_match
-
-            matches.append(
-                MatchObject(
-                    node=node,
-                    file_name=os.path.relpath(file_name, os.getcwd()),
-                    function_text=text.decode(),
-                    function_line_number=function_start_line,
-                    match_line_number=match_line_number,
-                    path=path,
-                )
+) -> List[MatchObject]:
+    matches = []
+    get_definition_result = get_definition_node_of_member_call_expression(
+        lsp_client, node, file_name
+    )
+    if get_definition_result is not None:
+        target_node, target_file_path = get_definition_result
+        if target_node:
+            path_object = PathObject(
+                file_name=os.path.relpath(file_name, os.getcwd()),
+                function_name=get_function_or_method_name(function_node),
+                start_line=function_node.start_point[0] + 1,
+                path_function_call_line=node.start_point[0] + 1,
             )
-
-    if node.type in ["member_call_expression", "object_creation_expression"]:
-        # Get definition node
-        get_definition_result = get_definition_node_of_member_call_expression(
-            lsp_client, node, file_name
-        )
-        if get_definition_result is not None:
-            target_node, target_file_path = get_definition_result
-
-            if target_node:
-                path_object = PathObject(
-                    file_name=os.path.relpath(file_name, os.getcwd()),
-                    function_name=get_function_or_method_name(function_node),
-                    start_line=function_node.start_point[0] + 1,
-                    path_function_call_line=node.start_point[0] + 1,
-                )
-                target_path = path.copy()
-                target_path.append(path_object)
-
+            target_path = path.copy()
+            target_path.append(path_object)
+            matches.extend(
                 collect_function_calls(
                     lsp_client,
                     target_node,
                     pattern,
-                    matches,
                     visited_nodes,
                     target_path,
                     target_file_path,
                     target_node,
                 )
-            else:
-                print("No target node for this node")
+            )
+    return matches
 
+
+def process_children(
+    lsp_client,
+    node,
+    pattern: re.Pattern,
+    visited_nodes,
+    path: List[PathObject],
+    file_name: str,
+    function_node: treesitter.Node,
+) -> List[MatchObject]:
+    matches = []
     for child in node.children:
-        collect_function_calls(
-            lsp_client,
-            child,
-            pattern,
-            matches,
-            visited_nodes,
-            path,
-            file_name,
-            function_node,
+        matches.extend(
+            collect_function_calls(
+                lsp_client,
+                child,
+                pattern,
+                visited_nodes,
+                path,
+                file_name,
+                function_node,
+            )
         )
+    return matches
+
+
+def collect_function_calls(
+    lsp_client,
+    node,
+    pattern: re.Pattern,
+    visited_nodes,
+    path: List[PathObject],
+    file_name: str,
+    function_node: treesitter.Node,
+) -> List[MatchObject]:
+    if not file_name or not node or (file_name, node.id) in visited_nodes:
+        return []
+    
+    visited_nodes.add((file_name, node.id))
+    matches = []
+
+    if node.type in ["function_call", "method_declaration"]:
+        matches.extend(
+            process_function_call_or_declaration(node, pattern, path, file_name)
+        )
+    if node.type in ["member_call_expression", "object_creation_expression"]:
+        matches.extend(
+            process_member_call_expression_or_object_creation_expression(
+                lsp_client, node, pattern, visited_nodes, path, file_name, function_node
+            )
+        )
+    matches.extend(process_children(lsp_client, node, pattern, visited_nodes, path, file_name, function_node))
+
+    return matches
 
 
 def get_tree_sitter_node_from_lsp_range(
@@ -176,7 +212,7 @@ def get_path_object_from_node(node, file_name):
 
 
 def get_definition_node_of_member_call_expression(
-    lsp_client: lsp.PHP_LSP_CLIENT, node, file_name
+        lsp_client: lsp.PHP_LSP_CLIENT, node: Node, file_name: str
 ) -> Optional[Tuple[Node, str]]:
     if not node or node.type not in [
         "member_call_expression",
@@ -190,9 +226,7 @@ def get_definition_node_of_member_call_expression(
         return None
     start_row, start_col = function_name_node.start_point
 
-    print(file_name)
-    results = lsp_client.get_definitions(file_name, start_row, start_col)
-    print(results)
+    results = lsp_client.get_definitions(file_name, start_row, start_col+1)
 
     if not results:
         failed_to_follow.add(function_name_node.text.decode())
@@ -228,12 +262,6 @@ def print_matches(matches: List[MatchObject]):
             for path in match.path:
                 print(str(path),'->')
             print(match.file_name, text_lines[0])
-            # for text_line in text_lines:
-            # if(line == match_path_end.match_line_number):
-            # print(f"***{line} ",text_line)
-            # else:
-            # print(f"{line} ",text_line)
-            #   line += 1
     else:
         print("No matches found")
 
@@ -245,20 +273,18 @@ def search_pattern(lsp_client, file_path, function_name, pattern) -> List[MatchO
         print("Not inside a function or method")
         return []
 
-    # Collect matching function calls
-    matches = []
     visited_nodes = set()
     path = []
-    collect_function_calls(
+    matches = collect_function_calls(
         lsp_client,
         parent_function,
         pattern,
-        matches,
         visited_nodes,
         path,
         str(file_path),
         parent_function,
     )
+
     return matches
 
 
@@ -267,10 +293,19 @@ def cli():
     parser.add_argument("file", help="The file to analyze")
     parser.add_argument("function", help="The function to search")
     parser.add_argument("pattern", help="The pattern to search for")
+    parser.add_argument("-d", "--directory", help="The working directory")
 
     args = parser.parse_args()
 
     file_path = Path(args.file)
+
+    # handling working directory
+    if args.directory:
+        working_directory = args.directory
+    else:
+        working_directory = file_path.parent
+
+    os.chdir(working_directory)
 
     if not file_path.is_file():
         print(f"File {file_path} not found")
