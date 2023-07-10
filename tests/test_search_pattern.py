@@ -7,13 +7,14 @@ from lsp_tree_finder.main import search_pattern
 class TestSearchPattern(unittest.TestCase):
 
     def setUp(self):
+        self.test_dir = Path(__file__).parent / "example_directory";
         self.lsp_client = lsp.PHP_LSP_CLIENT()
 
     def tearDown(self):
         self.lsp_client.close()
 
     def test_search_pattern_test1(self):
-        file_path = Path("tests/test1.php")
+        file_path = self.test_dir / "test1.php"
         function_name = "method1"
         pattern = re.compile(r"TestClass2")
 
@@ -25,7 +26,7 @@ class TestSearchPattern(unittest.TestCase):
         self.assertEqual(matches[0].path[-1].match_line_number, 9)
 
     def test_search_pattern_test2(self):
-        file_path = Path("tests/test1.php")
+        file_path = self.test_dir / "test1.php"
         function_name = "method4"
         pattern = re.compile(r"method5")
 
@@ -36,7 +37,7 @@ class TestSearchPattern(unittest.TestCase):
         self.assertEqual(matches[0].path[-1].match_line_number, 15)
 
     def test_search_pattern_test3(self):
-        file_path = Path("tests/test2.php")
+        file_path = self.test_dir / "test2.php"
         function_name = "method3"
         pattern = re.compile(r"TestClass1")
 

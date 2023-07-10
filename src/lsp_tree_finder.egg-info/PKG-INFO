@@ -1,7 +1,7 @@
 Metadata-Version: 2.1
 Name: lsp-tree-finder
 Version: 0.2
-Summary: Command line too to search for pattern inside of call tree under selected function
+Summary: Command line tool to search for pattern inside of call tree under selected function
 Home-page: https://github.com/AndrewLaird/lsp_tree_finder
 Author: Andrew Laird
 Author-email: lairdandrew11@gmail.com

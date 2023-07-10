@@ -62,25 +62,3 @@ class PHP_LSP_CLIENT():
         self.lsp_client.shutdown()
         self.lsp_client.exit()
         self.subprocess.kill()
-
-
-class LspClient:
-    def __init__(self, host, port):
-        self.lsp_transport = pylspclient.LspEndpointTransport.connect_tcp(host, port)
-        self.lsp_client = pylspclient.LspClient(self.lsp_transport)
-
-        # Initialize the connection
-        init_params = pylspclient.InitializeParams(processId=None, rootUri=None,
-                                                   capabilities={}, workspaceFolders=None)
-        self.lsp_client.call('initialize', init_params)
-
-    def get_go_to_definition_response(self, line, character, filepath):
-        # Perform the "go to definition" operation
-        params = pylspclient.TextDocumentPositionParams(
-            textDocument=pylspclient.TextDocumentIdentifier(uri=filepath),
-            position=pylspclient.Position(line=line, character=character))
-        response = self.lsp_client.call('textDocument/definition', params)
-
-        # Parse the response
-        response_data = json.loads(response)
-        return response_data

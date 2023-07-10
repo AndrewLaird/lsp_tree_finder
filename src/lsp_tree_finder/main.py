@@ -10,15 +10,6 @@ from lsp_tree_finder.helpers import lsp, treesitter
 from lsp_tree_finder.data_classes import PathObject, MatchObject
 import pylspclient
 
-Language.build_library(
-    # Store the library in the `build` directory
-    str(Path(__file__).parent / "build/my-languages.so"),
-    # Include one or more languages
-    [
-        str(Path(__file__).parent / "vendor/tree-sitter-php"),
-    ],
-)
-
 PHP_LANGUAGE = Language(str(Path(__file__).parent / "build/my-languages.so"), "php")
 
 parser = Parser()
@@ -27,7 +18,7 @@ parsed_files = {}
 failed_to_follow = set()
 
 
-def parse_file(file_path):
+def parse_file(file_path) -> Node:
     if file_path in parsed_files:
         return parsed_files[file_path]
     with file_path.open() as file:
@@ -48,6 +39,7 @@ def get_function_or_method_name(node) -> str:
             result = find_name(grandchild)
             if result:
                 return result.decode()
+        return ""
 
     if node.type != "method_declaration":
         return "Not called on a method"
@@ -198,7 +190,9 @@ def get_definition_node_of_member_call_expression(
         return None
     start_row, start_col = function_name_node.start_point
 
+    print(file_name)
     results = lsp_client.get_definitions(file_name, start_row, start_col)
+    print(results)
 
     if not results:
         failed_to_follow.add(function_name_node.text.decode())
